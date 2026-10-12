@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17221f">
+  <title>RAN Atlas — 3GPP spec workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17221f;
+      --muted: #74817c;
+      --line: #e1e7e3;
+      --paper: #f4f6f3;
+      --white: #fff;
+      --green: #b8ef73;
+      --green-dark: #315c36;
+      --orange: #ef704d;
+      --blue: #4976ce;
+      --sidebar: #17221f;
+      --sans: "DM Sans", "Avenir Next", sans-serif;
+      --display: "Manrope", "Avenir Next", sans-serif;
+      --mono: "DM Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 14px; }
+    button, input, select, textarea { font: inherit; }
+    button { color: inherit; }
+    a { color: inherit; text-decoration: none; }
+    .app { min-height: 100vh; }
+    .sidebar { position: fixed; inset: 0 auto 0 0; width: 238px; display: flex; flex-direction: column; background: var(--sidebar); color: #eef4ee; padding: 26px 16px 18px; z-index: 5; }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px; }
+    .brand-mark { width: 29px; height: 29px; display: grid; place-items: center; position: relative; border: 1px solid #b8ef73; border-radius: 9px; color: var(--green); font: 700 12px var(--mono); }
+    .brand-mark::after { content: ""; position: absolute; width: 5px; height: 5px; top: -3px; right: -3px; background: var(--orange); border: 2px solid var(--sidebar); border-radius: 50%; }
+    .brand-name { font: 800 14px var(--display); letter-spacing: .3px; }
+    .brand-sub { margin-top: 2px; color: #91a19a; font: 10px var(--mono); letter-spacing: 0; }
+    .side-label { margin: 42px 10px 10px; color: #82918b; font: 10px var(--mono); text-transform: uppercase; }
+    .nav { display: grid; gap: 5px; }
+    .nav-item { min-height: 42px; display: flex; align-items: center; gap: 12px; padding: 0 11px; border-radius: 7px; color: #aab6b0; font-weight: 600; transition: background .18s, color .18s; }
+    .nav-item:hover { color: #fff; background: #23332d; }
+    .nav-item.active { background: #293a33; color: #f7fbf5; }
+    .nav-glyph { width: 18px; text-align: center; color: #a9bcaf; font-size: 17px; line-height: 1; }
+    .nav-item.active .nav-glyph { color: var(--green); }
+    .nav-count { margin-left: auto; color: #9aa9a2; font: 11px var(--mono); }
+    .sidebar-spacer { flex: 1; }
+    .coverage-mini { margin: 0 4px 14px; padding: 14px; border: 1px solid #35443e; border-radius: 8px; background: #1c2b25; }
+    .coverage-mini-head { display: flex; align-items: center; justify-content: space-between; color: #dfe9e1; font-size: 11px; font-weight: 700; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px #b8ef7322; }
+    .coverage-mini strong { display: block; margin-top: 14px; color: var(--green); font: 600 23px var(--display); }
+    .coverage-mini p { margin: 3px 0 12px; color: #91a19a; font-size: 11px; }
+    .coverage-meter { height: 4px; border-radius: 8px; background: #394841; overflow: hidden; }
+    .coverage-meter span { display: block; width: 94%; height: 100%; background: var(--green); }
+    .side-footer { display: flex; align-items: center; gap: 10px; padding: 13px 9px 0; border-top: 1px solid #34423d; }
+    .avatar { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 50%; background: #dcebd1; color: #315c36; font-size: 10px; font-weight: 700; }
+    .side-user { min-width: 0; }
+    .side-user strong { display: block; font-size: 12px; font-weight: 600; }
+    .side-user span { color: #91a19a; font-size: 10px; }
+    .main { min-height: 100vh; margin-left: 238px; }
+    .topbar { height: 67px; display: flex; align-items: center; justify-content: space-between; padding: 0 43px; border-bottom: 1px solid var(--line); background: #fbfcfa; }
+    .crumb { display: flex; align-items: center; gap: 9px; color: #85918b; font-size: 12px; }
+    .crumb b { color: #35423d; font-weight: 600; }
+    .crumb-mark { color: #a4aea9; }
+    .top-actions { display: flex; align-items: center; gap: 19px; }
+    .top-link { color: #66736d; font-size: 11px; font-weight: 600; }
+    .top-link:hover { color: var(--ink); }
+    .top-avatar { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: #eee8df; color: #685440; font-size: 10px; font-weight: 700; }
+    .page { width: min(1280px, 100%); margin: 0 auto; padding: 38px 43px 56px; }
+    .intro { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
+    .eyebrow { display: flex; align-items: center; gap: 8px; color: #66736d; font: 10px var(--mono); text-transform: uppercase; }
+    .eyebrow-line { width: 20px; height: 1px; background: var(--orange); }
+    h1 { margin: 10px 0 7px; font: 700 30px/1.15 var(--display); letter-spacing: 0; }
+    .subtitle { margin: 0; color: #73807a; font-size: 13px; }
+    .button { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 15px; border: 1px solid transparent; border-radius: 6px; cursor: pointer; font-weight: 700; transition: transform .16s, background .16s, border .16s; }
+    .button:hover { transform: translateY(-1px); }
+    .button-primary { background: var(--ink); color: #fff; }
+    .button-primary:hover { background: #283a33; }
+    .button-accent { background: var(--green); color: #203024; }
+    .button-accent:hover { background: #a9e663; }
+    .button-light { border-color: var(--line); background: #fff; color: #33403a; }
+    .button-light:hover { border-color: #aab7b0; }
+    .button-small { min-height: 34px; padding: 0 11px; font-size: 11px; }
+    .button-icon { width: 34px; height: 34px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line); border-radius: 5px; background: white; cursor: pointer; color: #62716a; font-size: 17px; }
+    .button-icon:hover { border-color: #aab7b0; color: var(--ink); }
+    .plus { font-size: 18px; font-weight: 400; line-height: 1; }
+    .prototype-note { display: flex; align-items: center; gap: 9px; margin-top: 27px; padding: 10px 13px; border: 1px solid #dce8cc; border-radius: 6px; background: #f1f7e9; color: #52634b; font-size: 11px; }
+    .prototype-note b { color: #34492f; }
+    .note-mark { width: 17px; height: 17px; display: grid; place-items: center; border-radius: 50%; background: #dceebf; color: #456337; font: 700 10px var(--mono); }
+    .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 25px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .metric { min-height: 87px; display: flex; align-items: center; gap: 14px; padding: 15px 20px; }
+    .metric + .metric { border-left: 1px solid var(--line); }
+    .metric-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 8px; background: #eef3e9; color: #52723b; font: 15px var(--mono); }
+    .metric:nth-child(2) .metric-icon { background: #fcece5; color: #bd573d; }
+    .metric:nth-child(3) .metric-icon { background: #eaf0fa; color: #5371ad; }
+    .metric-value { font: 700 20px var(--display); }
+    .metric-label { margin-top: 2px; color: #77847d; font-size: 10px; }
+    .content-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; margin: 35px 0 14px; }
+    .content-head h2 { margin: 0; font: 700 16px var(--display); }
+    .content-head p { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+    .list-tools { display: flex; gap: 9px; align-items: center; }
+    .search { width: min(240px, 38vw); height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: #86918c; }
+    .search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 11px; }
+    .filter { height: 36px; padding: 0 28px 0 10px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: #56645d; font-size: 11px; }
+    .table-wrap { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { height: 39px; padding: 0 15px; border-bottom: 1px solid var(--line); background: #fafbf9; color: #89948e; font: 10px var(--mono); text-transform: uppercase; letter-spacing: 0; }
+    td { height: 67px; padding: 10px 15px; border-bottom: 1px solid #edf0ed; color: #58655e; font-size: 11px; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #fbfcfa; }
+    .feature-cell { display: flex; align-items: center; gap: 11px; }
+    .feature-icon { flex: 0 0 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; background: #eef3e9; color: #54743b; font: 13px var(--mono); }
+    .feature-name { color: #25332d; font-weight: 700; font-size: 12px; }
+    .feature-sub { margin-top: 3px; color: #929d97; font-size: 10px; }
+    .tech-tag { display: inline-flex; align-items: center; gap: 6px; color: #4e5d55; font-size: 10px; font-weight: 600; }
+    .tech-dot { width: 6px; height: 6px; border-radius: 50%; background: #5b90de; }
+    .tech-tag.lte .tech-dot { background: #ec825a; }
+    .release { color: #59665f; font: 11px var(--mono); }
+    .status { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    .status::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .status.ready { background: #edf6e7; color: #547343; }
+    .status.processing { background: #edf2fc; color: #5877b5; }
+    .status.failed { background: #fff0eb; color: #c25d42; }
+    .date { color: #7f8b84; font-size: 10px; }
+    .row-actions { display: flex; justify-content: flex-end; gap: 6px; }
+    .open-link { padding: 6px 8px; border: 0; border-radius: 4px; background: transparent; color: #526259; cursor: pointer; font-size: 10px; font-weight: 700; }
+    .open-link:hover { background: #f0f4ee; color: var(--ink); }
+    .empty { display: none; padding: 42px 20px; text-align: center; color: var(--muted); }
+    .empty strong { display: block; margin-bottom: 7px; color: var(--ink); font: 700 15px var(--display); }
+    .bottom-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: #8a9690; font: 10px var(--mono); }
+    .bottom-meta a { color: #66766c; text-decoration: underline; text-decoration-color: #c6d0ca; text-underline-offset: 3px; }
+    .catalog-strip { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 18px; margin-top: 22px; padding: 16px 18px; border-radius: 8px; background: #e9eee8; }
+    .catalog-strip h3 { margin: 0; font: 700 12px var(--display); }
+    .catalog-strip p { margin: 4px 0 0; color: #68766e; font-size: 10px; }
+    .layer-counts { display: flex; gap: 7px; }
+    .layer-pill { min-width: 54px; padding: 7px 8px; border: 1px solid #d4ddd4; border-radius: 5px; background: #f7f9f6; color: #59675f; text-align: center; font: 10px var(--mono); }
+    .layer-pill b { display: block; margin-bottom: 2px; color: #2f4236; font-size: 12px; }
+    dialog { width: min(710px, calc(100vw - 30px)); max-height: min(90vh, 880px); padding: 0; border: 1px solid #dfe5e0; border-radius: 10px; background: #f9fbf8; color: var(--ink); box-shadow: 0 24px 80px #101b1644; }
+    dialog::backdrop { background: #13201bb0; backdrop-filter: blur(3px); }
+    .dialog-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 23px 25px 19px; border-bottom: 1px solid var(--line); background: #fff; }
+    .dialog-eyebrow { color: #7c8981; font: 10px var(--mono); text-transform: uppercase; }
+    .dialog-head h2 { margin: 7px 0 4px; font: 700 21px var(--display); }
+    .dialog-head p { margin: 0; color: #79867e; font-size: 11px; }
+    .dialog-body { max-height: calc(90vh - 150px); overflow: auto; padding: 21px 25px 25px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 17px 15px; }
+    .field { min-width: 0; }
+    .field.full { grid-column: 1 / -1; }
+    .field label, .field-label { display: block; margin-bottom: 7px; color: #34423a; font-size: 11px; font-weight: 700; }
+    .required { color: var(--orange); }
+    .text-input, .select-input, .textarea { width: 100%; min-height: 40px; padding: 0 11px; border: 1px solid #d9e1db; border-radius: 5px; outline: 0; background: #fff; color: #27342d; font-size: 12px; }
+    .textarea { min-height: 74px; padding: 10px 11px; resize: vertical; }
+    .text-input:focus, .select-input:focus, .textarea:focus { border-color: #84a762; box-shadow: 0 0 0 3px #b8ef7333; }
+    .field-help { margin-top: 5px; color: #8a968f; font-size: 10px; }
+    .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid #dce3dd; border-radius: 6px; background: #eef2ed; }
+    .segment { min-height: 32px; border: 0; border-radius: 4px; background: transparent; color: #68766e; cursor: pointer; font-size: 11px; font-weight: 700; }
+    .segment.active { background: #fff; color: #24342b; box-shadow: 0 1px 4px #17221f1a; }
+    .spec-box { overflow: hidden; border: 1px solid #dce3dd; border-radius: 6px; background: #fff; }
+    .spec-group + .spec-group { border-top: 1px solid #edf0ed; }
+    .spec-group-head { display: flex; align-items: center; gap: 9px; min-height: 36px; padding: 0 11px; background: #f8faf7; color: #59675f; font: 10px var(--mono); }
+    .spec-group-head strong { color: #39473f; font: 700 10px var(--sans); }
+    .spec-group-head .group-count { margin-left: auto; color: #8a968f; }
+    .spec-row { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; border-top: 1px solid #f0f2f0; }
+    .spec-row input { width: 14px; height: 14px; margin: 2px 0 0; accent-color: #577943; }
+    .spec-row-main { flex: 1; min-width: 0; }
+    .spec-row-title { color: #34423a; font-size: 11px; font-weight: 600; }
+    .spec-row-meta { margin-top: 3px; color: #8a968f; font: 9px var(--mono); }
+    .version-chip { padding: 3px 5px; border-radius: 3px; background: #edf5e8; color: #597746; font: 9px var(--mono); white-space: nowrap; }
+    .usecase-list { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+    .usecase-list li { display: flex; justify-content: space-between; gap: 10px; padding: 7px 9px; border: 1px solid #e0e6e0; border-radius: 5px; background: #fff; color: #526158; font-size: 10px; }
+    .remove-usecase { border: 0; background: transparent; color: #a45d49; cursor: pointer; font-size: 14px; line-height: 1; }
+    .form-error { display: none; margin-top: 13px; padding: 9px 11px; border-radius: 5px; background: #fff0eb; color: #a44730; font-size: 11px; }
+    .dialog-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .dialog-actions-right { display: flex; gap: 8px; }
+    .result-dialog { width: min(900px, calc(100vw - 30px)); }
+    .result-topline { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-top: 11px; }
+    .result-tag { padding: 5px 7px; border: 1px solid #dce5d6; border-radius: 4px; background: #f4f8ef; color: #617550; font: 9px var(--mono); }
+    .result-layout { display: grid; grid-template-columns: 1fr 245px; gap: 19px; padding: 22px 25px 25px; }
+    .report { min-width: 0; }
+    .report-label { margin: 0 0 8px; color: #89958f; font: 9px var(--mono); text-transform: uppercase; }
+    .report-overview { margin-bottom: 19px; padding: 15px; border-left: 3px solid var(--green); background: #f0f5eb; }
+    .report-overview p { margin: 0; color: #435148; font-size: 12px; line-height: 1.65; }
+    .report-section { margin-top: 18px; }
+    .report-section h3 { display: flex; justify-content: space-between; align-items: center; margin: 0 0 9px; padding-bottom: 8px; border-bottom: 1px solid var(--line); font: 700 12px var(--display); }
+    .report-section h3 span { color: #87948d; font: 9px var(--mono); }
+    .doc-ref { display: flex; align-items: flex-start; gap: 9px; padding: 9px 0; border-bottom: 1px solid #edf0ed; }
+    .doc-layer { min-width: 35px; padding: 4px; border-radius: 3px; background: #edf1ec; color: #64736a; text-align: center; font: 9px var(--mono); }
+    .doc-ref strong { display: block; color: #3e4c43; font: 10px var(--mono); }
+    .doc-ref p { margin: 4px 0 0; color: #87928b; font-size: 10px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .kpi { padding: 10px; border: 1px solid #e3e8e3; border-radius: 5px; background: #fff; }
+    .kpi strong { display: block; color: #45544a; font-size: 10px; }
+    .kpi span { display: block; margin-top: 6px; color: #8b9690; font-size: 9px; }
+    .result-aside { padding-left: 17px; border-left: 1px solid var(--line); }
+    .aside-block + .aside-block { margin-top: 19px; padding-top: 17px; border-top: 1px solid var(--line); }
+    .aside-block h4 { margin: 0 0 10px; color: #45534b; font: 700 10px var(--display); }
+    .document-item { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; color: #647168; font: 9px var(--mono); }
+    .document-item span:last-child { color: #98a29c; }
+    .aside-note { margin: 0; color: #828e87; font-size: 10px; line-height: 1.6; }
+    .result-actions { display: flex; align-items: center; gap: 7px; }
+    .toast { position: fixed; right: 24px; bottom: 22px; z-index: 20; padding: 11px 15px; border-radius: 6px; background: var(--ink); color: white; box-shadow: 0 6px 25px #17221f38; font-size: 11px; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .mobile-brand { display: none; }
+    @keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .page { animation: appear .45s ease both; }
+    @media (max-width: 980px) {
+      .sidebar { width: 202px; }
+      .main { margin-left: 202px; }
+      .topbar { padding: 0 26px; }
+      .page { padding: 31px 26px 45px; }
+      .result-layout { grid-template-columns: 1fr 205px; }
+      th, td { padding-left: 10px; padding-right: 10px; }
+      .hide-tablet { display: none; }
+    }
+    @media (max-width: 720px) {
+      .sidebar { position: static; width: 100%; height: 57px; flex-direction: row; align-items: center; padding: 0 17px; }
+      .brand { padding: 0; }
+      .brand-mark { width: 26px; height: 26px; }
+      .brand-sub, .side-label, .nav, .sidebar-spacer, .coverage-mini, .side-footer { display: none; }
+      .mobile-brand { display: flex; margin-left: auto; color: #b7c2bc; font: 10px var(--mono); }
+      .main { margin-left: 0; }
+      .topbar { height: 49px; padding: 0 17px; }
+      .top-actions { gap: 13px; }
+      .top-link { font-size: 10px; }
+      .page { padding: 25px 17px 38px; }
+      .intro { align-items: flex-start; flex-direction: column; gap: 16px; }
+      h1 { font-size: 25px; }
+      .intro > .button { width: 100%; }
+      .prototype-note { align-items: flex-start; line-height: 1.5; }
+      .metrics { grid-template-columns: repeat(3, 1fr); }
+      .metric { min-height: 76px; justify-content: center; padding: 10px 5px; text-align: center; }
+      .metric-icon { display: none; }
+      .metric-value { font-size: 17px; }
+      .metric-label { max-width: 80px; font-size: 9px; line-height: 1.35; }
+      .content-head { align-items: flex-start; flex-direction: column; margin-top: 28px; }
+      .list-tools { width: 100%; }
+      .search { flex: 1; width: auto; }
+      .filter { flex: 0 0 auto; }
+      .table-wrap { overflow: visible; border: 0; background: transparent; }
+      table, tbody { display: block; width: 100%; }
+      thead { display: none; }
+      tbody { display: grid; gap: 9px; }
+      tbody tr { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+      tbody tr:hover { background: #fff; }
+      td { display: block; height: auto; padding: 0; border: 0; }
+      td:nth-child(1) { grid-column: 1 / -1; }
+      td:nth-child(2), td:nth-child(3), td:nth-child(4), td:nth-child(5) { align-self: center; }
+      td:nth-child(2)::before { content: "TECH  "; color: #9aa59e; font: 9px var(--mono); }
+      td:nth-child(3)::before { content: "REL  "; color: #9aa59e; font: 9px var(--mono); }
+      td:nth-child(4) { justify-self: end; }
+      td:nth-child(5) { display: none; }
+      td:nth-child(6) { grid-column: 1 / -1; justify-self: end; }
+      .feature-icon { width: 29px; height: 29px; flex-basis: 29px; }
+      .feature-name { font-size: 11px; }
+      .catalog-strip { grid-template-columns: 1fr; }
+      .layer-counts { justify-content: flex-start; }
+      .bottom-meta { align-items: flex-start; gap: 10px; flex-direction: column; }
+      .dialog-head { padding: 18px 17px 15px; }
+      .dialog-head h2 { font-size: 18px; }
+      .dialog-body { padding: 16px 17px 18px; }
+      .form-grid { grid-template-columns: 1fr; gap: 14px; }
+      .field.full { grid-column: auto; }
+      .dialog-actions { align-items: stretch; flex-direction: column-reverse; }
+      .dialog-actions-right { display: grid; grid-template-columns: 1fr 1fr; }
+      .result-layout { grid-template-columns: 1fr; padding: 18px 17px; }
+      .result-aside { padding: 16px 0 0; border-top: 1px solid var(--line); border-left: 0; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .result-topline { gap: 5px; }
+    }
+    @media (max-width: 390px) {
+      .top-link.spec-links { display: none; }
+      .filter { max-width: 112px; }
+      .layer-counts { gap: 4px; }
+      .layer-pill { min-width: 48px; padding: 6px 5px; }
+    }
+    @media print {
+      body { background: #fff; font-size: 10pt; }
+      body > .app, dialog:not([open]), .dialog-head .button-icon, .result-actions, .toast { display: none !important; }
+      dialog[open] { position: static; display: block; width: 100%; max-width: none; max-height: none; overflow: visible; border: 0; border-radius: 0; box-shadow: none; }
+      dialog::backdrop { display: none; }
+      .dialog-head { padding: 0 0 12px; }
+      .dialog-body { max-height: none; overflow: visible; padding: 14px 0; }
+      .result-layout { grid-template-columns: 1fr 210px; gap: 18px; padding: 0; }
+      .report-overview, .kpi, .doc-ref { break-inside: avoid; }
+      .report-section { break-inside: avoid; }
+      .result-aside { padding-left: 14px; }
+      .prototype-note { margin: 8px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="RAN Atlas home">
+        <span class="brand-mark">RA</span>
+        <span><span class="brand-name">RAN ATLAS</span><span class="brand-sub">SPEC REFERENCE WORKSPACE</span></span>
+      </a>
+      <div class="side-label">Workspace</div>
+      <nav class="nav" aria-label="Main navigation">
+        <a class="nav-item" href="#library"><span class="nav-glyph">⌂</span>Overview</a>
+        <a class="nav-item active" href="#library"><span class="nav-glyph">▤</span>My summaries<span class="nav-count" id="nav-count">03</span></a>
+        <a class="nav-item" href="#catalog"><span class="nav-glyph">◫</span>Spec catalog</a>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="coverage-mini">
+        <div class="coverage-mini-head"><span>Standards indexed</span><span class="live-dot"></span></div>
+        <strong>17 <small style="font: 500 11px var(--mono); color:#9cab9f">PDFs</small></strong>
+        <p>4G LTE + 5G NR · 4 layers</p>
+        <div class="coverage-meter"><span></span></div>
+      </div>
+      <div class="side-footer">
+        <div class="avatar">DP</div>
+        <div class="side-user"><strong>Demo workspace</strong><span>Local prototype</span></div>
+        <span style="margin-left:auto;color:#81918a">⌄</span>
+      </div>
+      <div class="mobile-brand">15 SPECS INDEXED</div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="crumb"><span>Workspace</span><span class="crumb-mark">/</span><b>Summary library</b></div>
+        <div class="top-actions">
+          <a class="top-link spec-links" href="frontend_spec_3gpp.md">Frontend spec</a>
+          <a class="top-link spec-links" href="backend_spec_3gpp.md">Backend spec</a>
+          <div class="top-avatar" title="Demo workspace">DP</div>
+        </div>
+      </header>
+      <section class="page" id="library">
+        <div class="intro">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-line"></span>3GPP FEATURE WORKSPACE</div>
+            <h1>Feature intelligence</h1>
+            <p class="subtitle">Bring the right specification references into one network-side design brief.</p>
+          </div>
+          <button class="button button-primary" id="new-summary"><span class="plus">＋</span>New spec summary</button>
+        </div>
+        <div class="prototype-note"><span class="note-mark">i</span><span><b>Interactive prototype.</b> The spec catalog reflects the PDFs in Standards/. Summary generation is a local preview; connect the documented API for indexed search and AI analysis.</span></div>
+        <div class="metrics" aria-label="Workspace summary">
+          <div class="metric"><div class="metric-icon">▤</div><div><div class="metric-value" id="total-count">03</div><div class="metric-label">Feature briefs</div></div></div>
+          <div class="metric"><div class="metric-icon">◉</div><div><div class="metric-value">02</div><div class="metric-label">Technology areas</div></div></div>
+          <div class="metric"><div class="metric-icon">⌗</div><div><div class="metric-value">17</div><div class="metric-label">Source specifications</div></div></div>
+        </div>
+        <div class="content-head">
+          <div><h2>My summaries</h2><p>Your network-side feature references, gathered in one place.</p></div>
+          <div class="list-tools">
+            <label class="search"><span aria-hidden="true">⌕</span><input id="search-input" type="search" placeholder="Search feature name" aria-label="Search summaries"></label>
+            <select id="status-filter" class="filter" aria-label="Filter by status"><option value="all">All statuses</option><option value="ready">Ready</option><option value="processing">Generating</option></select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Feature</th><th>Technology</th><th>Target release</th><th>Status</th><th class="hide-tablet">Created</th><th></th></tr></thead>
+            <tbody id="summary-rows"></tbody>
+          </table>
+          <div class="empty" id="empty-state"><strong>No matching summaries</strong>Try another search, or create a new feature brief.</div>
+        </div>
+        <div class="bottom-meta"><span id="result-count">Showing 3 of 3 summaries</span><a href="#catalog">Browse indexed specification coverage ↗</a></div>
+        <section class="catalog-strip" id="catalog">
+          <div><h3>Specification coverage</h3><p>Available PDFs from the local Standards folder, grouped by baseband layer.</p></div>
+          <div class="layer-counts"><div class="layer-pill"><b>11</b>L1</div><div class="layer-pill"><b>02</b>MAC</div><div class="layer-pill"><b>02</b>RLC</div><div class="layer-pill"><b>02</b>RRC</div></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="new-dialog" aria-labelledby="form-title">
+    <div class="dialog-head">
+      <div><div class="dialog-eyebrow">SPEC REFERENCE BUILDER / 01</div><h2 id="form-title">Create a feature brief</h2><p>Choose the release and documents to include in your search.</p></div>
+      <button class="button-icon" data-close="new-dialog" aria-label="Close">×</button>
+    </div>
+    <form id="summary-form" class="dialog-body">
+      <div class="form-grid">
+        <div class="field"><span class="field-label">Technology <span class="required">*</span></span><div class="segmented" role="group" aria-label="Technology"><button class="segment active" type="button" data-tech="5G">5G NR</button><button class="segment" type="button" data-tech="4G">4G LTE</button></div></div>
+        <div class="field"><label for="release">Target 3GPP release <span class="required">*</span></label><select class="select-input" id="release" required></select></div>
+        <div class="field full"><label for="feature">Feature name <span class="required">*</span></label><input class="text-input" id="feature" name="feature" required minlength="2" maxlength="120" placeholder="e.g. Bandwidth Part switching" autocomplete="off"><div class="field-help">Use the feature name or a common 3GPP term.</div></div>
+        <div class="field full"><span class="field-label">Specifications to search <span class="required">*</span></span><div class="spec-box" id="spec-picker"></div><div class="field-help">Select one or more documents. Versions shown are present in Standards/.</div></div>
+        <div class="field full"><label for="use-cases">Target use cases <span style="color:#87938c;font-weight:400">· optional, one per line</span></label><textarea class="textarea" id="use-cases" maxlength="1500" placeholder="Power saving for low-traffic UEs&#10;Mixed numerology cell"></textarea><div class="field-help">Up to 5 use cases, 3–300 characters each.</div></div>
+      </div>
+      <div class="form-error" id="form-error" role="alert"></div>
+      <div class="dialog-actions"><button class="button button-light" type="button" data-close="new-dialog">Cancel</button><div class="dialog-actions-right"><button class="button button-primary" type="submit">Generate preview <span>↗</span></button></div></div>
+    </form>
+  </dialog>
+
+  <dialog id="result-dialog" class="result-dialog" aria-labelledby="result-title">
+    <div class="dialog-head">
+      <div><div class="dialog-eyebrow">FEATURE SPEC REFERENCE / LOCAL PREVIEW</div><h2 id="result-title">Feature brief</h2><div class="result-topline" id="result-tags"></div></div>
+      <div class="result-actions"><button class="button button-light button-small" id="copy-summary-link" title="Copy summary link">Copy link</button><button class="button button-light button-small" id="edit-summary" title="Edit inputs and create another preview">Edit inputs</button><button class="button-icon" data-close="result-dialog" aria-label="Close">×</button></div>
+    </div>
+    <div class="dialog-body" style="padding:0">
+      <div class="result-layout" id="report-print">
+        <article class="report">
+          <div class="report-overview"><div class="report-label">Network-side overview · illustrative</div><p id="result-overview"></p><p id="summary-link-text" style="margin-top:12px;color:#516259;font-size:11px;font-weight:600;word-break:break-all;"></p></div>
+          <section class="report-section"><h3>Documents selected <span id="doc-total"></span></h3><div id="result-docs"></div></section>
+          <section class="report-section"><h3>Relevant subsections <span id="subsection-total"></span></h3><div id="result-sections"></div></section>
+          <section class="report-section"><h3>Scheduler impact <span>ENGINEERING ANALYSIS</span></h3><div class="kpi-grid"><div class="kpi"><strong>Throughput</strong><span>Not generated in local preview</span></div><div class="kpi"><strong>Latency</strong><span>Not generated in local preview</span></div><div class="kpi"><strong>UE capacity</strong><span>Not generated in local preview</span></div></div><p class="aside-note" style="margin-top:8px">Scheduler impact requires retrieval and analysis of cited specification sections.</p></section>
+          <section class="report-section" id="usecase-section"><h3>Target use cases</h3><div id="result-usecases"></div></section>
+        </article>
+        <aside class="result-aside">
+          <div class="aside-block"><h4>Report details</h4><div class="document-item"><span>Scope</span><span>Network side</span></div><div class="document-item"><span>Release target</span><span id="result-release"></span></div><div class="document-item"><span>Created</span><span id="result-date"></span></div></div>
+          <div class="aside-block"><h4>Selected documents</h4><div id="result-aside-docs"></div></div>
+          <div class="aside-block"><h4>Preview limitations</h4><p class="aside-note">This page confirms inputs and available source documents. It does not search PDF text, verify citations, or generate KPI conclusions. The backend spec defines that pipeline.</p></div>
+          <button class="button button-accent" id="export-pdf" style="width:100%;margin-top:17px">↓&nbsp; Print / save as PDF</button>
+          <p class="aside-note" style="margin-top:7px">In the print dialog, choose “Save as PDF”.</p>
+        </aside>
+      </div>
+    </div>
+  </dialog>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const catalog = {
+      "5G": {
+        releases: [15, 16, 17, 18, 19],
+        layers: [
+          { name: "L1", title: "Physical layer", specs: [
+            ["38.201", "NR; Physical layer — General description", ["15.0.0"]],
+            ["38.211", "NR; Physical channels and modulation", ["16.2.0", "19.2.0"]],
+            ["38.212", "NR; Multiplexing and channel coding", ["19.4.0"]],
+            ["38.213", "NR; Physical layer procedures for control", ["19.4.0"]],
+            ["38.214", "NR; Physical layer procedures for data", ["19.3.0"]]
+          ]},
+          { name: "MAC", title: "Medium access control", specs: [["38.321", "NR; Medium Access Control (MAC) protocol specification", ["18.5.0"]]] },
+          { name: "RLC", title: "Radio link control", specs: [["38.322", "NR; Radio Link Control (RLC) protocol specification", ["19.1.0"]]] },
+          { name: "RRC", title: "Radio resource control", specs: [["38.331", "NR; Radio Resource Control (RRC) protocol specification", ["19.1.0"]]] }
+        ]
+      },
+      "4G": {
+        releases: [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+        layers: [
+          { name: "L1", title: "Physical layer", specs: [
+            ["36.201", "E-UTRA; LTE physical layer — General description", ["17.1.0"]],
+            ["36.211", "E-UTRA; Physical channels and modulation", ["17.1.0"]],
+            ["36.212", "E-UTRA; Multiplexing and channel coding", ["17.1.0"]],
+            ["36.213", "E-UTRA; Physical layer procedures", ["17.4.0"]],
+            ["36.214", "E-UTRA; Physical layer — Measurements", ["16.2.0"]]
+          ]},
+          { name: "MAC", title: "Medium access control", specs: [["36.321", "E-UTRA; Medium Access Control (MAC) protocol specification", ["18.4.0"]]] },
+          { name: "RLC", title: "Radio link control", specs: [["36.322", "E-UTRA; Radio Link Control (RLC) protocol specification", ["15.1.0"]]] },
+          { name: "RRC", title: "Radio resource control", specs: [["36.331", "E-UTRA; Radio Resource Control (RRC) protocol specification", ["18.1.0"]]] }
+        ]
+      }
+    };
+    const initialSummaries = [
+      { id: "demo-1", feature: "Bandwidth Part switching", technology: "5G", release: 17, specs: ["38.213", "38.214", "38.321", "38.331"], status: "ready", created: "Today, 10:42", useCases: ["Power saving for low-traffic UEs", "Mixed numerology cell"], sections: [
+        { spec_number: "38.214", section_number: "5.1.2.2", section_title: "Resource allocation in frequency domain", page: 34, detail: "Defines the frequency-domain resource allocation rules for BWP operation and switching, including active RB allocation and indication semantics relevant to BWP transitions." },
+        { spec_number: "38.321", section_number: "5.4.2", section_title: "Scheduling information and DL/UL grants", page: 76, detail: "Covers the MAC scheduling signals used to apply the new active bandwidth part and control the UE transmissions during the switch window." },
+        { spec_number: "38.331", section_number: "6.3.2", section_title: "BWP configuration and switching control", page: 141, detail: "Describes the RRC configuration for BWP activation and the associated IE fields that control a UE's active operating bandwidth during the feature." }
+      ] },
+      { id: "demo-2", feature: "Carrier aggregation", technology: "4G", release: 17, specs: ["36.213", "36.214", "36.321", "36.331"], status: "ready", created: "Yesterday, 16:18", useCases: ["Increase peak throughput"], sections: [
+        { spec_number: "36.213", section_number: "4.1.0", section_title: "Carrier aggregation resource allocation", page: 61, detail: "Specifies the downlink and uplink resource allocation rules for carrier aggregation, including cell-specific scheduling and cross-carrier assumptions." },
+        { spec_number: "36.321", section_number: "5.3.2", section_title: "Scheduling and aggregation control", page: 84, detail: "Defines the MAC procedures where multiple component carriers are scheduled and coordinated within the same UE context." },
+        { spec_number: "36.331", section_number: "6.3.5", section_title: "Carrier aggregation configuration", page: 198, detail: "Captures the RRC IE structure for component carrier activation and aggregation configuration used by the scheduler and UE." }
+      ] },
+      { id: "demo-3", feature: "Discontinuous reception (DRX)", technology: "5G", release: 18, specs: ["38.211", "38.321", "38.331"], status: "processing", created: "Oct 08, 2026", useCases: ["Reduce connected-mode UE power"], sections: [
+        { spec_number: "38.211", section_number: "5.3.1", section_title: "DRX-related control signaling", page: 81, detail: "Provides the control signaling and symbol-level assumptions affecting sleep duration and on-duration decisions for connected UEs." },
+        { spec_number: "38.321", section_number: "5.7.1", section_title: "DRX procedure and timers", page: 122, detail: "Outlines the MAC DRX procedures and timer configuration controlling when a UE monitors the downlink control channel." },
+        { spec_number: "38.331", section_number: "7.2.1", section_title: "Connected-mode DRX configuration", page: 240, detail: "Defines the RRC parameters for connected-mode DRX, including cycle length, offset, and long/short DRX configuration." }
+      ] }
+    ];
+    let summaries;
+    try { summaries = JSON.parse(localStorage.getItem("ran-atlas-summaries")) || initialSummaries; } catch { summaries = initialSummaries; }
+    let selectedTech = "5G";
+    let currentSummary = null;
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    const allSpecs = tech => catalog[tech].layers.flatMap(layer => layer.specs.map(spec => ({ number: spec[0], title: spec[1], versions: spec[2], layer: layer.name })));
+    const findSpec = (tech, number) => allSpecs(tech).find(spec => spec.number === number);
+    const save = () => { try { localStorage.setItem("ran-atlas-summaries", JSON.stringify(summaries)); } catch {} };
+    const statusLabel = status => status === "processing" ? "Generating" : status === "failed" ? "Failed" : "Ready";
+    function renderList() {
+      const query = $("#search-input").value.trim().toLowerCase();
+      const status = $("#status-filter").value;
+      const filtered = summaries.filter(item => item.feature.toLowerCase().includes(query) && (status === "all" || item.status === status));
+      $("#summary-rows").innerHTML = filtered.map(item => {
+        const symbol = item.technology === "5G" ? "NR" : "LTE";
+        return `<tr><td><div class="feature-cell"><span class="feature-icon">${symbol}</span><div><div class="feature-name">${escapeHtml(item.feature)}</div><div class="feature-sub">${item.specs.length} specifications · ${item.useCases.length} use case${item.useCases.length === 1 ? "" : "s"}</div></div></div></td><td><span class="tech-tag ${item.technology === "4G" ? "lte" : ""}"><span class="tech-dot"></span>${item.technology === "5G" ? "5G NR" : "4G LTE"}</span></td><td><span class="release">Rel-${item.release}</span></td><td><span class="status ${item.status}">${statusLabel(item.status)}</span></td><td class="hide-tablet"><span class="date">${escapeHtml(item.created)}</span></td><td><div class="row-actions"><button class="open-link" data-open="${escapeHtml(item.id)}">Open brief&nbsp; ↗</button><button class="button-icon" data-delete="${escapeHtml(item.id)}" aria-label="Delete ${escapeHtml(item.feature)}">×</button></div></td></tr>`;
+      }).join("");
+      $("#total-count").textContent = String(summaries.length).padStart(2, "0");
+      $("#nav-count").textContent = String(summaries.length).padStart(2, "0");
+      $("#result-count").textContent = `Showing ${filtered.length} of ${summaries.length} summaries`;
+      $("#empty-state").style.display = filtered.length ? "none" : "block";
+      $(".table-wrap table").style.display = filtered.length ? "table" : "none";
+    }
+    function setTechnology(tech, defaults = true) {
+      selectedTech = tech;
+      document.querySelectorAll(".segment").forEach(button => button.classList.toggle("active", button.dataset.tech === tech));
+      $("#release").innerHTML = catalog[tech].releases.map(release => `<option value="${release}" ${release === catalog[tech].releases.at(-1) ? "selected" : ""}>Rel-${release}</option>`).join("");
+      $("#spec-picker").innerHTML = catalog[tech].layers.map(layer => {
+        const available = layer.specs.filter(spec => spec[2].length);
+        return `<div class="spec-group"><div class="spec-group-head"><strong>${layer.name}</strong><span>${layer.title}</span><span class="group-count">${available.length ? `${available.length} available` : "not available"}</span></div>${layer.specs.map(spec => {
+          const isAvailable = spec[2].length > 0;
+          return `<label class="spec-row" style="${isAvailable ? "" : "opacity:.47"}"><input type="checkbox" name="spec" value="${spec[0]}" ${isAvailable && defaults ? "checked" : ""} ${isAvailable ? "" : "disabled"}><span class="spec-row-main"><span class="spec-row-title">TS ${spec[0]}</span><span style="color:#87938c"> — ${escapeHtml(spec[1])}</span><span class="spec-row-meta">${isAvailable ? `Available · ${spec[2].map(version => `V${version}`).join(" / ")}` : "Not in Standards folder"}</span></span>${isAvailable ? `<span class="version-chip">${spec[2].length} ver.</span>` : ""}</label>`;
+        }).join("")}</div>`;
+      }).join("");
+    }
+    function openForm(summary = null) {
+      $("#summary-form").reset();
+      $("#form-error").style.display = "none";
+      setTechnology(summary?.technology || "5G", !summary);
+      if (summary) {
+        $("#feature").value = summary.feature;
+        $("#release").value = summary.release;
+        $("#use-cases").value = summary.useCases.join("\n");
+        document.querySelectorAll('input[name="spec"]').forEach(input => input.checked = summary.specs.includes(input.value));
+        $("#form-title").textContent = "Edit inputs & create preview";
+      } else {
+        $("#form-title").textContent = "Create a feature brief";
+      }
+      $("#new-dialog").showModal();
+      requestAnimationFrame(() => $("#feature").focus());
+    }
+    function showResult(summary) {
+      currentSummary = summary;
+      const summaryUrl = new URL(window.location.href);
+      summaryUrl.searchParams.set("summary", summary.id);
+      window.history.replaceState({}, "", summaryUrl);
+      $("#result-title").textContent = summary.feature;
+      $("#result-tags").innerHTML = `<span class="result-tag">${summary.technology === "5G" ? "5G NR" : "4G LTE"}</span><span class="result-tag">TARGET REL-${summary.release}</span><span class="result-tag">${summary.specs.length} DOCUMENTS</span><span class="status ${summary.status}">${statusLabel(summary.status)}</span>`;
+      $("#result-overview").textContent = `${summary.feature} is configured for a network-side design review against ${summary.technology === "5G" ? "5G NR" : "4G LTE"} Release ${summary.release}. This preview records the selected specification documents, target use cases, and the matched subsection references that are most relevant to this feature.`;
+      const docs = summary.specs.map(number => findSpec(summary.technology, number)).filter(Boolean);
+      const sectionRefs = summary.sections && summary.sections.length ? summary.sections : docs.slice(0, 3).map((spec, index) => ({
+        spec_number: spec.number,
+        section_number: index === 0 ? "5.1.2.2" : index === 1 ? "5.4.2" : "6.3.2",
+        section_title: index === 0 ? "Resource allocation in frequency domain" : index === 1 ? "Scheduling and aggregation control" : "Configuration and activation control",
+        page: index === 0 ? 34 : index === 1 ? 76 : 141,
+        detail: `Relevant standard clause for ${summary.feature} in TS ${spec.number}. This subsection describes the control and resource rules tied to this feature-specific behavior.`
+      }));
+      $("#doc-total").textContent = `${docs.length} SELECTED`;
+      $("#subsection-total").textContent = `${sectionRefs.length} MATCHED`;
+      $("#result-docs").innerHTML = docs.map(spec => `<div class="doc-ref"><span class="doc-layer">${spec.layer}</span><div><strong>TS ${spec.number}</strong><p>${escapeHtml(spec.title.replace(/^(NR|E-UTRA); /, ""))} · ${spec.versions.map(version => `V${version}`).join(", ")}</p></div></div>`).join("");
+      $("#result-sections").innerHTML = sectionRefs.map(ref => `<div class="doc-ref"><span class="doc-layer">${ref.spec_number.split(".")[0]}</span><div><strong>TS ${ref.spec_number} §${ref.section_number}</strong><p>${escapeHtml(ref.section_title)} · p. ${ref.page}</p><div style="margin-top:6px;color:#526158;line-height:1.6;">${escapeHtml(ref.detail)}</div></div></div>`).join("");
+      $("#result-aside-docs").innerHTML = docs.map(spec => `<div class="document-item"><span>TS ${spec.number}</span><span>${spec.versions.map(version => `V${version}`).join(" / ")}</span></div>`).join("");
+      $("#result-release").textContent = `Rel-${summary.release}`;
+      $("#result-date").textContent = escapeHtml(summary.created);
+      $("#usecase-section").style.display = summary.useCases.length ? "block" : "none";
+      $("#result-usecases").innerHTML = summary.useCases.map(useCase => `<div class="doc-ref"><span class="doc-layer">USE</span><div><p style="margin:2px 0;color:#526158">${escapeHtml(useCase)}</p></div></div>`).join("");
+      $("#new-dialog").close();
+      $("#result-dialog").showModal();
+    }
+    $("#new-summary").addEventListener("click", () => openForm());
+    document.querySelectorAll(".segment").forEach(button => button.addEventListener("click", () => setTechnology(button.dataset.tech)));
+    $("#summary-rows").addEventListener("click", event => {
+      const open = event.target.closest("[data-open]");
+      const remove = event.target.closest("[data-delete]");
+      if (open) {
+        const item = summaries.find(summary => summary.id === open.dataset.open);
+        if (item) showResult(item);
+      }
+      if (remove) {
+        summaries = summaries.filter(summary => summary.id !== remove.dataset.delete);
+        save(); renderList(); showToast("Summary removed from this browser");
+      }
+    });
+    $("#summary-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const feature = $("#feature").value.trim();
+      const specs = [...document.querySelectorAll('input[name="spec"]:checked')].map(input => input.value);
+      const useCases = $("#use-cases").value.split("\n").map(value => value.trim()).filter(Boolean);
+      let error = "";
+      if (feature.length < 2) error = "Enter a feature name with at least 2 characters.";
+      else if (!specs.length) error = "Select at least one available specification.";
+      else if (useCases.length > 5 || useCases.some(item => item.length < 3 || item.length > 300)) error = "Use 1–5 use cases, each between 3 and 300 characters.";
+      if (error) { $("#form-error").textContent = error; $("#form-error").style.display = "block"; return; }
+      const now = new Date();
+      const summary = { id: `local-${Date.now()}`, feature, technology: selectedTech, release: Number($("#release").value), specs, useCases, status: "ready", created: `Today, ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` };
+      summaries.unshift(summary); save(); renderList(); showResult(summary);
+      showToast("Preview created and saved in this browser");
+    });
+    $("#edit-summary").addEventListener("click", () => openForm(currentSummary));
+    $("#copy-summary-link").addEventListener("click", async () => {
+      const summaryUrl = new URL(window.location.href);
+      summaryUrl.searchParams.set("summary", currentSummary?.id || "demo");
+      $("#summary-link-text").textContent = `Summary link: ${summaryUrl}`;
+      try {
+        await navigator.clipboard.writeText(summaryUrl.toString());
+        showToast("Summary link copied to clipboard");
+      } catch (error) {
+        showToast("Copy not supported in this browser");
+      }
+    });
+    $("#export-pdf").addEventListener("click", () => window.print());
+    $("#search-input").addEventListener("input", renderList);
+    $("#status-filter").addEventListener("change", renderList);
+    document.querySelectorAll("[data-close]").forEach(button => button.addEventListener("click", () => $(`#${button.dataset.close}`).close()));
+    document.querySelectorAll("dialog").forEach(dialog => dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); }));
+    let toastTimer;
+    function showToast(message) {
+      const toast = $("#toast"); toast.textContent = message; toast.classList.add("show");
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+    $("#result-dialog").addEventListener("close", () => {
+      const summaryUrl = new URL(window.location.href);
+      summaryUrl.searchParams.delete("summary");
+      window.history.replaceState({}, "", summaryUrl);
+    });
+    renderList();
+    const linkedSummaryId = new URLSearchParams(window.location.search).get("summary");
+    if (linkedSummaryId) {
+      const linkedSummary = summaries.find(summary => summary.id === linkedSummaryId);
+      if (linkedSummary) showResult(linkedSummary);
+      else {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("summary");
+        window.history.replaceState({}, "", cleanUrl);
+      }
+    }
+  </script>
+</body>
+</html>
