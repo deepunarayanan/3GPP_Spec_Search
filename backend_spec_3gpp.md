@@ -11,8 +11,8 @@ The backend must:
 1. Register and authenticate users (username + password).
 2. Ingest the 3GPP specification PDFs in the `Standards/` folder into a searchable index of numbered sections.
 3. Accept a summary request (feature name, technology, target release, specs to search, target use cases).
-4. Find the exact subsection-level sections relevant to the feature in each selected spec, grouped by baseband layer (L1, MAC, RLC, RRC), and match each result to the relevant 3GPP clause and page reference.
-5. Produce a short, cited summary per layer that includes the exact subsection numbers, titles, and brief extracted standard details for each feature-related clause, plus a scheduler-impact analysis on throughput, latency and UE capacity.
+4. Find the exact subsection-level sections relevant to the feature in each selected spec, grouped by baseband layer (L1, MAC, RLC, RRC) and functional subcategory (CU-CP, CU-UP, RRM, Layer 2, Layer 1), and match each result to the relevant 3GPP clause and page reference.
+5. Produce a short, cited summary per layer and functional subcategory that includes the exact subsection numbers, titles, brief extracted standard details, and a direct link to each cited source PDF page, plus a scheduler-impact analysis on throughput, latency and UE capacity.
 6. Store each summary against the user so they can see it again later.
 7. Render the summary as a PDF of **at most 5 pages**.
 
@@ -98,6 +98,18 @@ Static mapping in `catalog.py`:
 | RRC | 38.331 | 36.331 |
 
 Technology is derived from the series: `38.` → 5G, `36.` → 4G.
+
+**Functional subcategories** are a second, overlapping classification; they do not replace the protocol-layer catalog above. For each matched subsection, assign zero or more of `CUCP`, `CUUP`, `RRM`, `Layer 2`, and `Layer 1` only when supported by the subsection text and its normative role. Use the displayed forms CU-CP and CU-UP in the UI if desired:
+
+| Subcategory | Evidence / typical standards |
+|---|---|
+| CU-CP | RRC control-plane configuration and procedures, principally TS 38.331 / TS 36.331 |
+| CU-UP | User-plane PDCP and bearer data handling. TS 38.323 / TS 36.323 should be indexed to provide direct PDCP coverage; do not infer CU-UP behavior from an unrelated layer's clause. |
+| RRM | Radio-resource management configuration, measurements, mobility, admission, and resource-control procedures. This is cross-layer; cite only clauses that explicitly define or support the relevant RRM behavior. |
+| Layer 2 | MAC, RLC, and PDCP procedures, mapped to TS 38.321 / 38.322 / 38.323 and TS 36.321 / 36.322 / 36.323 as available. |
+| Layer 1 | Physical channels, coding, and physical-layer procedures, mapped to the L1 catalog in this section. |
+
+The current catalog does not include TS 38.323 or TS 36.323, so CU-UP/PDCP coverage is incomplete until those PDFs are added. Record this as a coverage gap rather than generating unsupported CU-UP findings. RRM is not a single protocol layer or one dedicated document in this catalog.
 
 **Current `Standards/` folder contents (checked against the PDFs in this workspace):** 4G — 36.201 (V17.1.0), 36.211 (V17.1.0), 36.212 (V17.1.0), 36.213 (V17.4.0), 36.214 (V16.2.0), 36.321 (V18.4.0), 36.322 (V15.1.0), 36.331 (V18.1.0); 5G — 38.201 (V15.0.0), 38.211 (V16.2.0 and V19.2.0), 38.212 (V19.4.0), 38.213 (V19.4.0), 38.214 (V19.3.0), 38.321 (V18.5.0), 38.322 (V19.1.0), 38.331 (V19.1.0). The API reports missing documents so the UI can say so instead of silently returning nothing (§6.4 "gaps").
 
@@ -267,6 +279,11 @@ A generated summary page therefore exposes a stable link such as `/summaries/{id
           "section_number": "5.1.2.2",
           "section_title": "Resource allocation in frequency domain",
           "page": 34,
+          "subcategories": [
+            { "name": "RRM", "details": "Defines frequency-domain resource allocation relevant to the requested feature." },
+            { "name": "Layer 1", "details": "Specifies physical-layer resource allocation for the feature." }
+          ],
+          "source_url": "/api/spec-documents/{document_id}/pdf#page=34",
           "relevance": 0.86,
           "citation": "TS 38.214 §5.1.2.2",
           "summary": "≤ 60 words: what this section defines and why it matters for the feature.",
@@ -294,7 +311,9 @@ A generated summary page therefore exposes a stable link such as `/summaries/{id
 }
 ```
 
-- `layers` always contains the four layers in order L1, MAC, RLC, RRC (empty list when nothing found or not requested).
+- `layers` always contains the four layers in order L1, MAC, RLC, RRC (empty list when nothing found or not requested). Each returned section also has `subcategories`, an array of `{ "name": ..., "details": ... }` objects using names from `CUCP`, `CUUP`, `RRM`, `Layer 2`, `Layer 1`; `details` briefly states the relevant standard behavior for that category and is grounded in the cited subsection. The array may be empty if classification is not supported by retrieved text.
+- Each returned section includes a server-generated `source_url` resolving to the exact ingested PDF and the PDF's 1-based page number. Render the citation and title as a link to this URL. The endpoint is authenticated, serves only indexed source PDFs, and must not accept arbitrary filesystem paths. Link using `page_start` from the stored subsection record, not an LLM-generated page number. If a section spans pages, link to its first page.
+- Important subsection links are generated from actual retrieved and validated `spec_sections` rows; never hard-code illustrative clause numbers as verified results. Retain the exact standard number, subsection number, title, and source page in the link label/details.
 - `direction` ∈ `increase | decrease | neutral | mixed`. ("Increase" latency is bad, "increase" throughput is good — the UI labels them, the backend just reports the direction.)
 - `page` is the PDF page in the source document (for the reader to jump to).
 
@@ -428,7 +447,7 @@ Rendered with WeasyPrint from `templates/summary.html`, A4, 18 mm margins, 10 pt
 1. **Header block** — title "3GPP Feature Spec Reference: {feature}", technology, target release, generated date, username.
 2. **Overview** + "Introduced in" line with its basis note.
 3. **Documents used** — compact table: spec, title, version, layer.
-4. **Per-layer sections** (L1 → MAC → RLC → RRC) — for each: `TS 38.214 §5.1.2.2 — Title (p. 34)` + summary. Empty layers show one line: "No relevant sections found" or "Specification not available".
+4. **Per-layer sections** (L1 → MAC → RLC → RRC), with functional subcategory details where evidence supports CUCP, CUUP, RRM, Layer 2, or Layer 1 — each `TS 38.214 §5.1.2.2 — Title (p. 34)` citation links to that exact page in the source standard. Empty layers show one line: "No relevant sections found" or "Specification not available".
 5. **Scheduler impact** — 3-row table: KPI | Direction | Explanation | Related sections, with the disclaimer.
 6. **Use-case notes** (if any).
 7. **Gaps / caveats.**

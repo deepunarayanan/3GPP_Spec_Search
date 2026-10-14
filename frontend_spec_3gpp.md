@@ -96,7 +96,7 @@ frontend/
 
 ### 4.3 My summaries (`/summaries`)
 
-- Top bar (all authenticated screens): app name (links home), **New summary** button, user menu (username, **Log out**).
+- Top bar (all authenticated screens): app name (links home), **Generate spec Summary** button, user menu (username, **Log out**).
 - Search box filtering by feature name (debounced 300 ms → `GET /api/summaries?q=`).
 - List of summaries, newest first:
   - Desktop (≥ 768 px): table — Feature | Technology | Release | Status | Created | actions (Open, Download PDF, Delete).
@@ -109,7 +109,7 @@ frontend/
 
 ### 4.4 New summary (`/summaries/new`)
 
-One-page form, single column on mobile, max-width 720 px on desktop. Field order follows the goal-spec use case ("release version, technology area and the name of the feature").
+One-page form, single column on mobile, max-width 720 px on desktop. Field order follows the goal-spec use case ("release version, technology area and the name of the feature"). The workspace heading is **RAN Feature mapping to 3GPP spec**.
 
 | # | Field | Control | Notes |
 |---|---|---|---|
@@ -166,7 +166,7 @@ Data: `GET /api/summaries/{id}`. While `status` is `queued` or `processing`, Tan
 3. **Layer sections** — one block per layer (L1, MAC, RLC, RRC):
    - Desktop: a sticky left-side mini nav (L1 · MAC · RLC · RRC · KPI impact · Use cases) that jumps to blocks.
    - Mobile: the mini nav becomes a horizontally scrollable tab strip at the top.
-   - Each `SectionCard`: `TS 38.214 §5.1.2.2` (monospace), section title, "p. 34", relevance bar (0–1 shown as a thin bar, not a number), the extracted subsection detail, and the summary text. A copy button copies `TS 38.214 §5.1.2.2 — Resource allocation in frequency domain`.
+  - Each `SectionCard`: a clickable `TS 38.214 §5.1.2.2` citation opening the backend-provided `source_url` at the exact source PDF page, section title, page, relevance bar (0–1 shown as a thin bar, not a number), extracted subsection detail, and summary text. Show each backend-provided functional subcategory (CUCP, CUUP, RRM, Layer 2, Layer 1) with its evidence-based `details`. A copy button copies `TS 38.214 §5.1.2.2 — Resource allocation in frequency domain`.
    - Empty layer: muted line "No relevant sections found in the selected specifications" (or the matching `gaps` message).
 4. **Scheduler impact (KPI table)** — rows Throughput, Latency, UE capacity; columns Direction | Explanation | Related sections.
    - Direction shown as icon + word, coloured by whether it is good or bad for that KPI: throughput/UE capacity "increase" = green, "decrease" = red; latency "increase" = red, "decrease" = green; neutral = grey; mixed = amber. Never rely on colour alone (always show the word).
@@ -222,7 +222,7 @@ Client validation is for fast feedback only; the backend's `400` `fields` map is
   - `credentials: "include"`, `Content-Type: application/json`, and header `X-Requested-With: fetch` on every request (backend CSRF rule).
   - Parses the shared error shape `{ error: { code, message, fields } }` into a typed `ApiError`.
   - On any `401` from a protected call: clear AuthContext, invalidate queries, redirect to `/login?next=…`.
-- `types.ts` defines `User`, `SpecCatalog`, `SummaryInput`, `SummaryListItem`, `Summary`, `SummaryResult`, `LayerBlock`, `SectionRef`, `KpiImpact`, matching backend §6.4 / §7 exactly.
+- `types.ts` defines `User`, `SpecCatalog`, `SummaryInput`, `SummaryListItem`, `Summary`, `SummaryResult`, `LayerBlock`, `SectionRef` (including `source_url` and `{ name, details }` subcategories), `KpiImpact`, matching backend §6.4 / §7 exactly.
 
 **Query keys**
 
